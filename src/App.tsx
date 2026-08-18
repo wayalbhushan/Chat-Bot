@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react'
 import { ChatHeader } from './components/ChatHeader'
 import { Composer } from './components/Composer'
 import { MessageList } from './components/MessageList'
-import { useChatDispatch, useChatState } from './hooks/useChat'
+import { useChatActions, useChatDispatch, useChatState } from './hooks/useChat'
 import { generateMessages } from './lib/seed'
 
 const SEED_COUNT = 30
@@ -17,19 +17,7 @@ export function App() {
     dispatch({ type: 'LOAD_HISTORY', messages: generateMessages(SEED_COUNT) })
   }, [dispatch])
 
-  const handleRetry = useCallback(
-    (id: string) => {
-      dispatch({ type: 'RETRY_MESSAGE', id })
-    },
-    [dispatch],
-  )
-
-  const handleSend = useCallback(
-    (text: string) => {
-      dispatch({ type: 'SEND_MESSAGE', id: crypto.randomUUID(), text, timestamp: Date.now() })
-    },
-    [dispatch],
-  )
+  const { send, retry } = useChatActions()
 
   const handleAtBottomChange = useCallback(
     (isAtBottom: boolean) => {
@@ -47,13 +35,13 @@ export function App() {
         <MessageList
           messages={messages}
           isBotTyping={isBotTyping}
-          onRetry={handleRetry}
+          onRetry={retry}
           onAtBottomChange={handleAtBottomChange}
         />
       </main>
       <footer className="shrink-0 border-t border-slate-200">
         <div className="mx-auto w-full max-w-3xl px-4 py-3">
-          <Composer onSend={handleSend} />
+          <Composer onSend={send} />
         </div>
       </footer>
     </div>

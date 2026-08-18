@@ -1,5 +1,6 @@
-import { createContext, useContext, type Dispatch } from 'react'
+import { createContext, useCallback, useContext, useRef, type Dispatch } from 'react'
 import type { ChatState, Message } from '../types'
+import { getBotReply, sendMessage } from '../lib/mockApi'
 
 export type ChatAction =
   | { type: 'SEND_MESSAGE'; id: string; text: string; timestamp: number }
@@ -91,4 +92,68 @@ export function useChatDispatch(): Dispatch<ChatAction> {
   const dispatch = useContext(ChatDispatchContext)
   if (dispatch === null) throw new Error('useChatDispatch must be used inside ChatProvider')
   return dispatch
+}
+
+export function useChatActions() {
+  const dispatch = useChatDispatch()
+  const { messages } = useChatState()
+  const messagesRef = useRef(messages)
+  messagesRef.current = messages
+
+  // Replies run through one chain so a send that lands mid-reply waits its turn
+  // instead of racing: two overlapping replies would clear isBotTyping early and
+  // append out of order.
+  const replyChainRef = useRef<Promise<void>>(Promise.resolve())
+
+  const queueBotReply = useCallback(
+    (text: string) => {
+      replyChainRef.current = replyChainRef.current.then(async () => {
+        dispatch({ type: 'BOT_TYPING_START' })
+        const reply = await getBotReply(text)
+        dispatch({
+          type: 'BOT_REPLY',
+          id: crypto.randomUUID(),
+          text: reply,
+          timestamp: Date.now(),
+        })
+      })
+    },
+    [dispatch],
+  )
+
+  const deliver = useCallback(
+    async (id: string, text: string) => {
+      try {
+        await sendMessage(text)
+      } catch {
+        dispatch({ type: 'MESSAGE_FAILED', id })
+        return
+      }
+      dispatch({ type: 'MESSAGE_SENT', id })
+      queueBotReply(text)
+    },
+    [dispatch, queueBotReply],
+  )
+
+  const send = useCallback(
+    (text: string) => {
+      const id = crypto.randomUUID()
+      dispatch({ type: 'SEND_MESSAGE', id, text, timestamp: Date.now() })
+      void deliver(id, text)
+    },
+    [dispatch, deliver],
+  )
+
+  // Retry reuses the original id, so the message keeps its place in the list.
+  const retry = useCallback(
+    (id: string) => {
+      const message = messagesRef.current.find((candidate) => candidate.id === id)
+      if (message === undefined) return
+      dispatch({ type: 'RETRY_MESSAGE', id })
+      void deliver(id, message.text)
+    },
+    [dispatch, deliver],
+  )
+
+  return { send, retry }
 }
