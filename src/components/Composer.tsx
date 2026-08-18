@@ -1,4 +1,10 @@
-import { useLayoutEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
+import {
+  useLayoutEffect,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+  type RefObject,
+} from 'react'
 import { SendHorizontal } from 'lucide-react'
 
 const MAX_HEIGHT_PX = 160
@@ -7,11 +13,14 @@ const COUNTER_VISIBLE_FROM = 3500
 
 interface ComposerProps {
   onSend: (text: string) => void
+  // Owned by the parent so focus can be returned here after a retry, which
+  // otherwise strands a keyboard user on a button that has just disappeared.
+  inputRef: RefObject<HTMLTextAreaElement>
 }
 
-export function Composer({ onSend }: ComposerProps) {
+export function Composer({ onSend, inputRef }: ComposerProps) {
   const [value, setValue] = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const textareaRef = inputRef
 
   // Measured after render rather than in the change handler, so clearing and
   // paste truncation shrink the box as well as growing it.
@@ -20,7 +29,7 @@ export function Composer({ onSend }: ComposerProps) {
     if (textarea === null) return
     textarea.style.height = 'auto'
     textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_HEIGHT_PX)}px`
-  }, [value])
+  }, [value, textareaRef])
 
   const canSend = value.trim().length > 0
 
@@ -37,6 +46,10 @@ export function Composer({ onSend }: ComposerProps) {
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Escape') {
+      setValue('')
+      return
+    }
     if (event.key !== 'Enter' || event.shiftKey) return
     // A coarse pointer means no Shift key within reach, so Enter has to be the
     // newline. isComposing guards IME candidate selection, which also fires Enter.
@@ -52,6 +65,7 @@ export function Composer({ onSend }: ComposerProps) {
       <div className="flex items-end gap-2 rounded-md border border-slate-200 bg-white p-2 shadow-sm">
         <textarea
           ref={textareaRef}
+          id="message-input"
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}

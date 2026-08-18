@@ -175,6 +175,14 @@ export function MessageList({
           setScroller(element instanceof HTMLElement ? element : null)
         }}
         className="h-full"
+        role="log"
+        // Virtuoso makes the scroller focusable so it can be scrolled from the
+        // keyboard. Without a name, that stop announces itself as the run-together
+        // text of every rendered message.
+        aria-label="Message history"
+        // Explicitly off: the announcing is done by LiveAnnouncer, which holds
+        // one message rather than re-reading rows as they recycle.
+        aria-live="off"
         data={messages}
         context={{ isBotTyping }}
         itemContent={renderItem}

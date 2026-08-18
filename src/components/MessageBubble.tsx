@@ -25,7 +25,8 @@ export function MessageBubble({ message, isGrouped, onRetry }: MessageBubbleProp
     .join(' ')
 
   return (
-    <div
+    <article
+      aria-label={`${isUser ? 'You' : 'Assistant'} at ${formatFull(message.timestamp)}`}
       className={`flex gap-2 ${isGrouped ? 'mt-0.5' : 'mt-3'} ${
         isUser ? 'justify-end' : 'justify-start'
       }`}
@@ -68,6 +69,6 @@ export function MessageBubble({ message, isGrouped, onRetry }: MessageBubbleProp
           </div>
         )}
       </div>
-    </div>
+    </article>
   )
 }
