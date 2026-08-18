@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import { ChatHeader } from './components/ChatHeader'
+import { Composer } from './components/Composer'
 import { MessageList } from './components/MessageList'
 import { useChatDispatch, useChatState } from './hooks/useChat'
 import { generateMessages } from './lib/seed'
@@ -19,6 +20,13 @@ export function App() {
   const handleRetry = useCallback(
     (id: string) => {
       dispatch({ type: 'RETRY_MESSAGE', id })
+    },
+    [dispatch],
+  )
+
+  const handleSend = useCallback(
+    (text: string) => {
+      dispatch({ type: 'SEND_MESSAGE', id: crypto.randomUUID(), text, timestamp: Date.now() })
     },
     [dispatch],
   )
@@ -44,7 +52,9 @@ export function App() {
         />
       </main>
       <footer className="shrink-0 border-t border-slate-200">
-        <div className="mx-auto w-full max-w-3xl px-4 py-3" />
+        <div className="mx-auto w-full max-w-3xl px-4 py-3">
+          <Composer onSend={handleSend} />
+        </div>
       </footer>
     </div>
   )
