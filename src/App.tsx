@@ -1,15 +1,17 @@
-import { MessageSquare } from 'lucide-react'
+import { ChatHeader } from './components/ChatHeader'
 
 export function App() {
   return (
-    <div className="flex h-full flex-col bg-white text-slate-900">
-      <header className="flex items-center gap-2 border-b border-slate-200 px-4 py-3">
-        <MessageSquare className="h-4 w-4 text-blue-600" />
-        <h1 className="text-header font-semibold">Chat</h1>
-      </header>
-      <main className="flex flex-1 items-center justify-center">
-        <p className="text-meta text-slate-500">No messages yet</p>
+    // 100dvh rather than 100vh: mobile Safari's collapsing toolbar makes 100vh
+    // taller than the visible area, which pushes the composer under the fold.
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-white text-slate-900">
+      <ChatHeader />
+      <main className="min-h-0 flex-1 overflow-hidden">
+        <div className="mx-auto h-full w-full max-w-3xl px-4" />
       </main>
+      <footer className="shrink-0 border-t border-slate-200">
+        <div className="mx-auto w-full max-w-3xl px-4 py-3" />
+      </footer>
     </div>
   )
 }

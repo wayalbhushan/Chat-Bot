@@ -8,8 +8,15 @@
   --text-header: 15px;
 }
 
+/* Only the message list may scroll. Locking the document also kills iOS
+   rubber-band bounce, which otherwise drags the fixed composer out of view. */
 html,
-body,
-#root {
+body {
   height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  font-size: var(--text-body);
 }
