@@ -7,7 +7,7 @@ export function TypingIndicator() {
     <div className="mt-3 flex justify-start gap-2">
       <div className="h-6 w-6 shrink-0">
         <span className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200">
-          <Bot className="h-4 w-4 text-slate-500" aria-hidden="true" />
+          <Bot className="h-4 w-4 text-slate-600" aria-hidden="true" />
         </span>
       </div>
       {/* Matches a real bubble's padding and line height so the list does not
@@ -16,7 +16,10 @@ export function TypingIndicator() {
         {DOT_DELAYS.map((delay) => (
           <span
             key={delay}
-            className="h-1.5 w-1.5 rounded-full bg-slate-400 motion-safe:animate-bounce"
+            // slate-500, not slate-400: these dots are the only visual carrier of
+            // "still thinking", and slate-400 on slate-100 is 2.4:1, under the 3:1
+            // WCAG 1.4.11 asks of graphical state indicators.
+            className="h-1.5 w-1.5 rounded-full bg-slate-500 motion-safe:animate-bounce"
             style={{ animationDelay: delay }}
           />
         ))}

@@ -73,7 +73,7 @@ export function Composer({ onSend, inputRef }: ComposerProps) {
           maxLength={MAX_LENGTH}
           placeholder="Send a message"
           aria-label="Message input"
-          className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-body text-slate-900 placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-body text-slate-900 placeholder:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
         />
         <button
           type="button"
@@ -90,7 +90,7 @@ export function Composer({ onSend, inputRef }: ComposerProps) {
         </button>
       </div>
       {value.length >= COUNTER_VISIBLE_FROM && (
-        <p className="mt-1 text-right text-meta text-slate-500">
+        <p className="mt-1 text-right text-meta text-slate-600">
           {value.length}/{MAX_LENGTH}
         </p>
       )}

@@ -22,7 +22,7 @@ export function ChatHeader({ onClear, onLoadStress }: ChatHeaderProps) {
         </span>
         <div className="flex min-w-0 flex-col">
           <span className="text-header font-semibold leading-5">Assistant</span>
-          <span className="text-meta leading-4 text-slate-500">Online</span>
+          <span className="text-meta leading-4 text-slate-600">Online</span>
         </div>
         <div className="ml-auto flex items-center gap-2">
           {/* Shipped in production on purpose: the 10,000-message case is the
@@ -31,7 +31,7 @@ export function ChatHeader({ onClear, onLoadStress }: ChatHeaderProps) {
             type="button"
             onClick={onLoadStress}
             aria-label="Load 10,000 demo messages"
-            className="rounded-md border border-slate-200 px-2 py-1 text-meta whitespace-nowrap text-slate-600 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            className="flex h-11 items-center rounded-md border border-slate-200 px-3 text-meta whitespace-nowrap text-slate-600 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
           >
             10k demo
           </button>
@@ -39,18 +39,18 @@ export function ChatHeader({ onClear, onLoadStress }: ChatHeaderProps) {
               focus to the browser chrome and cannot be styled or keyboard-tested. */}
           {isConfirming ? (
             <>
-              <span className="text-meta text-slate-500">Clear all?</span>
+              <span className="text-meta text-slate-600">Clear all?</span>
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="rounded-md px-1 text-meta font-medium text-red-600 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                className="flex h-11 items-center rounded-md px-2 text-meta font-medium text-red-600 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
               >
                 Clear
               </button>
               <button
                 type="button"
                 onClick={() => setIsConfirming(false)}
-                className="rounded-md px-1 text-meta text-slate-500 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                className="flex h-11 items-center rounded-md px-2 text-meta text-slate-600 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
               >
                 Cancel
               </button>
@@ -60,7 +60,7 @@ export function ChatHeader({ onClear, onLoadStress }: ChatHeaderProps) {
               type="button"
               onClick={() => setIsConfirming(true)}
               aria-label="Clear chat history"
-              className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              className="flex h-11 w-11 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
             </button>

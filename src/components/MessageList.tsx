@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Virtuoso, type Components, type VirtuosoHandle } from 'react-virtuoso'
 import type { Message } from '../types'
 import { EmptyState } from './EmptyState'
@@ -11,7 +11,6 @@ const AT_BOTTOM_THRESHOLD_PX = 80
 const VIEWPORT_OVERSCAN_PX = 400
 const SMOOTH_JUMP_MAX_PX = 2000
 const SETTLE_PASSES = 6
-const FOLLOW_SETTLE_PASSES = 3
 
 interface ListContext {
   isBotTyping: boolean
@@ -55,19 +54,6 @@ export function MessageList({
     initialIndexRef.current = messages.length - 1
   }
 
-  // Held in state, not a ref: the first render returns the empty state, so an
-  // effect reading a ref would run before Virtuoso exists and never attach.
-  const pinToBottom = useCallback(() => {
-    if (scroller === null) return
-    let pass = 0
-    const step = () => {
-      scroller.scrollTop = scroller.scrollHeight
-      pass += 1
-      if (pass < FOLLOW_SETTLE_PASSES) requestAnimationFrame(step)
-    }
-    step()
-  }, [scroller])
-
   // Whether to keep following is read from the live scroll position rather than
   // from atBottomStateChange: one short landing flips that flag false, which
   // then disables every later follow and lets the gap compound.
@@ -93,14 +79,13 @@ export function MessageList({
       if (followRef.current) scroller.scrollTop = scroller.scrollHeight
     })
     observer.observe(list)
+    // The typing footer sits outside the item list, so its height changes are
+    // invisible to an observer watching only the list. During a burst it toggles
+    // on every reply, and those uncounted pixels accumulated into a 1300px gap.
+    const footer = list.parentElement?.lastElementChild
+    if (footer instanceof HTMLElement && footer !== list) observer.observe(footer)
     return () => observer.disconnect()
   }, [scroller])
-
-  // The typing footer is outside the measured list, so its arrival and removal
-  // need their own pin.
-  useLayoutEffect(() => {
-    if (followRef.current) pinToBottom()
-  }, [isBotTyping, pinToBottom])
 
   useEffect(() => {
     const delta = messages.length - previousCountRef.current
@@ -187,12 +172,12 @@ export function MessageList({
         context={{ isBotTyping }}
         itemContent={renderItem}
         components={{ Footer: ListFooter }}
-        // Reading atBottom from the callback rather than component state keeps
-        // the decision current at the moment the data changes. 'auto' rather
-        // than 'smooth': a smooth follow animates toward a target that moves as
-        // appended rows are measured, so under a burst it falls thousands of
-        // pixels behind and raises an unread pill for the user's own messages.
-        followOutput={(atBottom) => (atBottom ? 'auto' : false)}
+        // Off deliberately. Virtuoso's follow scrolls to the last row's edge
+        // before that row is measured, landing ~95px short of the true bottom.
+        // That short landing emits a scroll event past the at-bottom threshold,
+        // which switched off the resize-driven pin above and let a burst of
+        // twenty drift 1300px behind. One mechanism owns the scroll position.
+        followOutput={false}
         atBottomStateChange={handleAtBottomStateChange}
         atBottomThreshold={AT_BOTTOM_THRESHOLD_PX}
         initialTopMostItemIndex={initialIndexRef.current ?? 0}

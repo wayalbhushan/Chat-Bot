@@ -37,7 +37,7 @@ export function MessageBubble({ message, isGrouped, onRetry }: MessageBubbleProp
         <div className="h-6 w-6 shrink-0">
           {!isGrouped && (
             <span className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200">
-              <Bot className="h-4 w-4 text-slate-500" aria-hidden="true" />
+              <Bot className="h-4 w-4 text-slate-600" aria-hidden="true" />
             </span>
           )}
         </div>
@@ -49,7 +49,7 @@ export function MessageBubble({ message, isGrouped, onRetry }: MessageBubbleProp
       >
         <div className={bubbleClasses}>{message.text}</div>
         <time
-          className="mt-1 text-meta text-slate-500"
+          className="mt-1 text-meta text-slate-600"
           dateTime={toISO(message.timestamp)}
           title={formatFull(message.timestamp)}
         >
