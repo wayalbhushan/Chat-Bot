@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+/* The three sizes in the type scale are named so no component reaches for an
+   arbitrary value. */
+@theme {
+  --text-meta: 13px;
+  --text-body: 14px;
+  --text-header: 15px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
