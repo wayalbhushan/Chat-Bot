@@ -46,6 +46,16 @@ export function save(messages: Message[]): void {
   }
 }
 
+// Distinguishes a first visit from a history the user deliberately cleared: the
+// cleared case leaves an empty array behind, and must not be re-seeded.
+export function hasStoredHistory(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null
+  } catch {
+    return false
+  }
+}
+
 export function load(): Message[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)

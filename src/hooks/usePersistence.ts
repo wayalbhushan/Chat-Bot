@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useChatDispatch, useChatState } from './useChat'
-import { load, save } from '../lib/storage'
+import { hasStoredHistory, load, save } from '../lib/storage'
+import { generateMessages } from '../lib/seed'
 
 const WRITE_DEBOUNCE_MS = 500
+const DEMO_SEED_COUNT = 15
 
 export function usePersistence() {
   const { messages } = useChatState()
@@ -11,7 +13,11 @@ export function usePersistence() {
   const isSuspendedRef = useRef(false)
 
   useEffect(() => {
-    dispatch({ type: 'LOAD_HISTORY', messages: load() })
+    // A first visit is seeded with a short conversation so the app does not open
+    // on an empty screen. Clearing the history writes an empty array, which
+    // counts as stored, so the empty state stays reachable and stays put.
+    const messages = hasStoredHistory() ? load() : generateMessages(DEMO_SEED_COUNT)
+    dispatch({ type: 'LOAD_HISTORY', messages })
     hasLoadedRef.current = true
   }, [dispatch])
 
