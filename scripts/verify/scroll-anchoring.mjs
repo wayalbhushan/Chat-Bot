@@ -5,10 +5,19 @@
 //   node scripts/verify/scroll-anchoring.mjs
 
 import { chromium } from 'playwright'
+import {
+  assertTrackedSelectorsMatched,
+  recordMatch,
+  requireElement,
+  trackSelector,
+} from './assert.mjs'
 
 const URL = 'http://localhost:5173/'
 const SC = '[data-testid="virtuoso-scroller"]'
-const PILL = 'main button[aria-label*="new message"], main button[aria-label*="ump to latest"]'
+const PILL = trackSelector(
+  'unread pill',
+  'main button[aria-label*="new message"], main button[aria-label*="ump to latest"]',
+)
 const out = {}
 
 const browser = await chromium.launch()
@@ -18,6 +27,8 @@ await page.waitForSelector('[data-index]', { timeout: 20000 })
 await page.waitForTimeout(1500)
 
 // Anchoring only means anything on a list long enough to scroll away from.
+await requireElement(page, 'button[aria-label="Load 10,000 demo messages"]', 'the 10k demo control')
+await requireElement(page, 'textarea', 'the composer input')
 await page.click('button[aria-label="Load 10,000 demo messages"]')
 await page.waitForTimeout(3000)
 
@@ -36,7 +47,10 @@ const probe = () =>
       }
     },
     { sel: SC, pillSel: PILL },
-  )
+  ).then((result) => {
+    recordMatch('unread pill', result.pillLabel)
+    return result
+  })
 
 const send = async (text) => {
   await page.fill('textarea', text)
@@ -131,5 +145,6 @@ out.burst = await page.evaluate(() => {
 out.afterBurst = await probe()
 
 await page.screenshot({ path: 'scripts/verify/output/final-bottom.png' })
+assertTrackedSelectorsMatched()
 console.log(JSON.stringify(out, null, 1))
 await browser.close()

@@ -7,9 +7,12 @@
 //   node scripts/verify/composer-sends.mjs
 
 import { chromium } from 'playwright'
+import { requireElement } from './assert.mjs'
 
 const URL = 'http://localhost:5173/'
 const SC = '[data-testid="virtuoso-scroller"]'
+// Not tracked as must-match: a correctly behaving composer never raises the
+// pill, so its absence for a whole run is the passing result here.
 const PILL = 'main button[aria-label*="new message"], main button[aria-label*="ump to latest"]'
 const out = {}
 
@@ -17,6 +20,8 @@ const browser = await chromium.launch()
 const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage()
 await page.goto(URL, { waitUntil: 'networkidle' })
 await page.waitForSelector('article')
+await requireElement(page, 'button[aria-label="Load 10,000 demo messages"]', 'the 10k demo control')
+await requireElement(page, 'textarea', 'the composer input')
 await page.click('button[aria-label="Load 10,000 demo messages"]')
 await page.waitForTimeout(3000)
 

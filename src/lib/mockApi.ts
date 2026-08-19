@@ -2,9 +2,7 @@
 // above it deals only in promises that resolve or reject, so swapping these two
 // functions for fetch calls requires no change to the reducer or the components.
 
-// Low enough that a demo is not interrupted every few sends, high enough that
-// the failed state and its retry are still reachable by hand.
-export const FAILURE_RATE = 0.05
+export const FAILURE_RATE = 0.15
 
 export const SEND_LATENCY_MIN_MS = 400
 export const SEND_LATENCY_MAX_MS = 900

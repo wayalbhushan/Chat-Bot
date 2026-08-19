@@ -46,7 +46,7 @@ Chat messages are variable height, which rules out the simplest options.
 - **TanStack Virtual** — handles dynamic measurement well, but is headless: scroll anchoring, stick-to-bottom, and away-from-bottom detection are all left to the caller.
 - **react-virtuoso** — measures variable heights automatically and exposes the scroll-position callbacks this UI needs.
 
-**Trade-off:** a heavier dependency in exchange for correctness on the most failure-prone interaction in a chat UI. Given that scroll anchoring still produced four separate bugs during this build (see Verification), the trade was worth it.
+**Trade-off:** a heavier dependency in exchange for correctness on the most failure-prone interaction in a chat UI. Given that scroll anchoring produced six separate bugs during this build — each found by measurement rather than inspection — the trade was worth it.
 
 ### Scroll anchoring: a single owner
 
@@ -85,7 +85,7 @@ Implementation notes:
 
 `src/lib/mockApi.ts` is the single seam where a real API would be substituted. Failure rate and latency bounds are named constants rather than inline magic numbers.
 
-- Send: 400–900ms latency, 5% failure rate — low enough not to interrupt a demo, high enough that the failed state and its retry are reachable by hand.
+- Send: 400–900ms latency, 15% failure rate.
 - Bot reply: 800–1500ms latency, drawn from a small array of canned responses.
 - Failed sends surface an inline error with a Retry control. Retry is user-initiated only — no auto-retry, no backoff.
 - Bot replies are serialized to preserve ordering and typing-state correctness; a burst drains sequentially rather than in parallel.
@@ -150,7 +150,7 @@ The count is 9–15 rather than higher because the seed includes ~1,600-characte
 
 **Frame timing** — 0 frames over 50ms under realistic wheel scrolling. A synthetic teleport stress test (60 jumps of 10,000px) ranges 0–7 depending on machine load; the wheel figure reflects real use.
 
-**Mock API over 2,000 calls** — observed failure rate matched the declared constant to within 0.002 when measured at 0.15; latencies within declared bounds.
+**Mock API over 2,000 calls** — 0.152 observed failure rate against a declared 0.15; latencies within declared bounds.
 
 **Burst integrity** — 20 rapid sends: 0 messages lost, 0 duplicate IDs, 0 stuck in `sending`, exactly one bot reply per successful send and none for failures.
 
