@@ -8,6 +8,13 @@ import { TypingIndicator } from './TypingIndicator'
 import { GROUP_WINDOW_MS } from '../lib/time'
 
 const AT_BOTTOM_THRESHOLD_PX = 80
+// Following resumes only at the true bottom, not anywhere inside the at-bottom
+// threshold. Those are different questions: 80px is generous enough to decide
+// whether to show the pill, but using it to decide whether to keep pinning made
+// every scroll of less than 80px snap straight back, so the list could not be
+// nudged up at all.
+const FOLLOW_RESUME_PX = 4
+const UPWARD_KEYS = new Set(['ArrowUp', 'PageUp', 'Home'])
 const VIEWPORT_OVERSCAN_PX = 400
 const SMOOTH_JUMP_MAX_PX = 2000
 const SMOOTH_SETTLE_MS = 400
@@ -45,6 +52,7 @@ export function MessageList({
   const [unreadCount, setUnreadCount] = useState(0)
   const previousCountRef = useRef(messages.length)
   const followRef = useRef(true)
+  const isParkedRef = useRef(false)
 
   // Frozen at the first non-empty render. Virtuoso reads this only when it
   // mounts, and history arrives one tick after mount, so it cannot be derived
@@ -55,17 +63,52 @@ export function MessageList({
     initialIndexRef.current = messages.length - 1
   }
 
-  // Whether to keep following is read from the live scroll position rather than
-  // from atBottomStateChange: one short landing flips that flag false, which
-  // then disables every later follow and lets the gap compound.
+  // Position alone cannot answer this. The gap grows both when the user scrolls
+  // away and when the list grows beneath them, and scrollTop is no better a
+  // signal because Virtuoso nudges it itself while correcting estimated row
+  // heights. So an upward gesture is what parks the list: until the user comes
+  // back to the true bottom, nothing re-pins, which is what makes a scroll of a
+  // few pixels possible at all. Without a gesture the gap rule still applies,
+  // so appended content keeps following.
   useEffect(() => {
     if (scroller === null) return
-    const handleScroll = () => {
-      const gap = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
-      followRef.current = gap <= AT_BOTTOM_THRESHOLD_PX
+
+    const gapNow = () => scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
+
+    const park = () => {
+      if (gapNow() > FOLLOW_RESUME_PX) {
+        isParkedRef.current = true
+        followRef.current = false
+      }
     }
+
+    const handleScroll = () => {
+      const gap = gapNow()
+      if (gap <= FOLLOW_RESUME_PX) {
+        isParkedRef.current = false
+        followRef.current = true
+        return
+      }
+      followRef.current = isParkedRef.current ? false : gap <= AT_BOTTOM_THRESHOLD_PX
+    }
+
+    const handleWheel = (event: WheelEvent) => {
+      if (event.deltaY < 0) park()
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (UPWARD_KEYS.has(event.key)) park()
+    }
+
     scroller.addEventListener('scroll', handleScroll, { passive: true })
-    return () => scroller.removeEventListener('scroll', handleScroll)
+    scroller.addEventListener('wheel', handleWheel, { passive: true })
+    scroller.addEventListener('touchmove', park, { passive: true })
+    scroller.addEventListener('keydown', handleKeyDown)
+    return () => {
+      scroller.removeEventListener('scroll', handleScroll)
+      scroller.removeEventListener('wheel', handleWheel)
+      scroller.removeEventListener('touchmove', park)
+      scroller.removeEventListener('keydown', handleKeyDown)
+    }
   }, [scroller])
 
   // Observing the rendered list rather than Virtuoso's own callbacks: its
@@ -77,7 +120,8 @@ export function MessageList({
     const list = scroller.querySelector('[data-testid="virtuoso-item-list"]')
     if (list === null) return
     const observer = new ResizeObserver(() => {
-      if (followRef.current) scroller.scrollTop = scroller.scrollHeight
+      if (!followRef.current) return
+      scroller.scrollTop = scroller.scrollHeight
     })
     observer.observe(list)
     // The typing footer sits outside the item list, so its height changes are
