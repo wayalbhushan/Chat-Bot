@@ -84,6 +84,10 @@ export function MessageList({
     // on every reply, and those uncounted pixels accumulated into a 1300px gap.
     const footer = list.parentElement?.lastElementChild
     if (footer instanceof HTMLElement && footer !== list) observer.observe(footer)
+    // The scroller itself, because the composer grows outside it: an auto-growing
+    // textarea takes height from this element without changing any content
+    // inside it, pushing the newest message out of view mid-sentence.
+    observer.observe(scroller)
     return () => observer.disconnect()
   }, [scroller])
 

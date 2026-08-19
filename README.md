@@ -122,7 +122,9 @@ Instead:
 
 ## Verification
 
-Seven scripts in `scripts/verify/` drive a real Chromium instance via Playwright. Each has a header stating its prerequisites; all seven run green from a clean checkout.
+Eight scripts in `scripts/verify/` drive a real Chromium instance via Playwright. Each has a header stating its prerequisites; all eight run green from a clean checkout.
+
+`composer-sends.mjs` drives sends through the composer UI — real per-character typing and Enter presses — rather than through state. That distinction matters: setting the input value in one shot skips the auto-grow height changes that a person triggers, and it hid a real bug (below).
 
 Playwright is intentionally **not** a dependency, to keep `npm install` from pulling ~300MB of browser binaries. Install it separately:
 
@@ -162,8 +164,9 @@ The count is 9–15 rather than higher because the seed includes ~1,600-characte
 
 ### Bugs found by measurement
 
-Four scroll bugs and three measurement bugs surfaced during this build. Each was found by instrumented measurement rather than visual inspection.
+Five scroll bugs and three measurement bugs surfaced during this build. Each was found by instrumented measurement rather than visual inspection.
 
+- **The composer pushed the newest message out of view while typing.** The bottom-pin observed the rendered list and the typing footer — both *inside* the scroller. The composer sits outside it, so growing the textarea to five lines took 81px of client height from the scroller without changing any observed element: the observer never fired, `scrollTop` never moved, and the gap crossed the at-bottom threshold mid-sentence, raising an unread pill before Enter was ever pressed. The scroller is now observed too. This survived every earlier script because they set the input value in one shot and only sampled *after* send, when the box had already reset to 40px.
 - **Two owners of scroll position** (described above). Only appeared under bursts, and adding console logging perturbed timing enough to hide it — the scripts caught what tracing could not.
 - **Unread count could never clear.** After a pill jump the list settled 95px from the bottom, just past an 80px threshold. `align: 'end'` stops at the last row's edge, leaving the footer below the fold. Without unread messages present it landed at 75px and appeared fine — a 15px margin between working and permanently stuck.
 - **Smooth scroll could not converge across 10,000 rows.** Unrendered rows are height-estimated, so `scrollHeight` grew as rows were measured and the target receded faster than the animation closed.
@@ -192,7 +195,7 @@ One accessibility issue found the same way: Virtuoso's scroller is focusable, co
 
 **No physical device testing.** Layout was verified via Chromium emulation at 320–1440px, including the composer growing to its 160px cap at 320px without displacing the message list. It has not been opened on a physical iOS or Android device, so the mobile keyboard interaction with `100dvh` is reasoned rather than observed.
 
-**No automated test suite.** Verification is the seven Playwright scripts above, which cover behaviour rather than units.
+**No automated test suite.** Verification is the eight Playwright scripts above, which cover behaviour rather than units.
 
 ---
 
