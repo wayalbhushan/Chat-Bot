@@ -5,10 +5,18 @@ import { formatFull, formatRelative, toISO } from '../lib/time'
 interface MessageBubbleProps {
   message: Message
   isGrouped: boolean
+  // True only for the final message of a same-sender run, so a run reads as one
+  // block with a single time rather than a stack of repeated stamps.
+  showTimestamp: boolean
   onRetry: (id: string) => void
 }
 
-export function MessageBubble({ message, isGrouped, onRetry }: MessageBubbleProps) {
+export function MessageBubble({
+  message,
+  isGrouped,
+  showTimestamp,
+  onRetry,
+}: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const isFailed = message.status === 'failed'
 
@@ -27,7 +35,7 @@ export function MessageBubble({ message, isGrouped, onRetry }: MessageBubbleProp
   return (
     <article
       aria-label={`${isUser ? 'You' : 'Assistant'} at ${formatFull(message.timestamp)}`}
-      className={`flex gap-2 ${isGrouped ? 'mt-0.5' : 'mt-3'} ${
+      className={`flex gap-2 ${isGrouped ? 'mt-0.5' : 'mt-4'} ${
         isUser ? 'justify-end' : 'justify-start'
       }`}
     >
@@ -43,13 +51,16 @@ export function MessageBubble({ message, isGrouped, onRetry }: MessageBubbleProp
         </div>
       )}
       <div
-        className={`flex min-w-0 max-w-[85%] flex-col sm:max-w-[75%] ${
+        className={`flex min-w-0 max-w-[85%] flex-col sm:max-w-[68%] ${
           isUser ? 'items-end' : 'items-start'
         }`}
       >
         <div className={bubbleClasses}>{message.text}</div>
+        {/* Kept in the markup even when hidden: the machine-readable time and
+            the hover detail belong to every message, only the visible stamp is
+            reserved for the end of a run. */}
         <time
-          className="mt-1 text-meta text-slate-600"
+          className={showTimestamp ? 'mt-1 text-meta text-slate-600' : 'sr-only'}
           dateTime={toISO(message.timestamp)}
           title={formatFull(message.timestamp)}
         >

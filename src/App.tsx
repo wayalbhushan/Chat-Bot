@@ -75,7 +75,7 @@ export function App() {
         />
       </main>
       <footer className="shrink-0 border-t border-slate-200">
-        <div className="mx-auto w-full max-w-3xl px-4 py-3">
+        <div className="mx-auto w-full max-w-content px-4 py-3">
           <Composer onSend={send} inputRef={composerRef} />
         </div>
       </footer>

@@ -27,7 +27,7 @@ interface MessageListProps {
 // overlay, so Virtuoso counts its height and the last message does not jump
 // when it appears or disappears.
 const ListFooter: Components<Message, ListContext>['Footer'] = ({ context }) => (
-  <div className="mx-auto w-full max-w-3xl px-4 pb-3">
+  <div className="mx-auto w-full max-w-content px-4 pb-3">
     {context?.isBotTyping ? <TypingIndicator /> : null}
   </div>
 )
@@ -140,14 +140,24 @@ export function MessageList({
   const renderItem = useCallback(
     (index: number, message: Message) => {
       const previous = messages[index - 1]
+      const next = messages[index + 1]
       const isGrouped =
         previous !== undefined &&
         previous.role === message.role &&
         message.timestamp - previous.timestamp < GROUP_WINDOW_MS
+      const isRunEnd =
+        next === undefined ||
+        next.role !== message.role ||
+        next.timestamp - message.timestamp >= GROUP_WINDOW_MS
 
       return (
-        <div className="mx-auto w-full max-w-3xl px-4">
-          <MessageBubble message={message} isGrouped={isGrouped} onRetry={onRetry} />
+        <div className="mx-auto w-full max-w-content px-4">
+          <MessageBubble
+            message={message}
+            isGrouped={isGrouped}
+            showTimestamp={isRunEnd}
+            onRetry={onRetry}
+          />
         </div>
       )
     },
@@ -163,7 +173,7 @@ export function MessageList({
         scrollerRef={(element) => {
           setScroller(element instanceof HTMLElement ? element : null)
         }}
-        className="h-full"
+        className="chat-scroller h-full"
         role="log"
         // Virtuoso makes the scroller focusable so it can be scrolled from the
         // keyboard. Without a name, that stop announces itself as the run-together

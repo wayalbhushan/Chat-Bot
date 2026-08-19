@@ -6,6 +6,31 @@
   --text-meta: 13px;
   --text-body: 14px;
   --text-header: 15px;
+  --container-content: 720px;
+}
+
+/* Scoped to the message list so the scrollbar reads as part of the surface
+   rather than the browser's default chrome. */
+.chat-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-slate-300) transparent;
+}
+
+.chat-scroller::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scroller::-webkit-scrollbar-thumb {
+  background-color: var(--color-slate-300);
+  border-radius: 9999px;
+}
+
+.chat-scroller::-webkit-scrollbar-button {
+  display: none;
 }
 
 /* Only the message list may scroll. Locking the document also kills iOS
