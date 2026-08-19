@@ -8,7 +8,7 @@ import { chromium } from 'playwright'
 
 const URL = 'http://localhost:5173/'
 const SC = '[data-testid="virtuoso-scroller"]'
-const PILL = 'main button[aria-label*="new message"], main button[aria-label="Scroll to latest"]'
+const PILL = 'main button[aria-label*="new message"], main button[aria-label*="ump to latest"]'
 const out = {}
 
 const browser = await chromium.launch()
@@ -67,6 +67,26 @@ await page.click(PILL)
 await page.waitForTimeout(1500)
 const afterPill = await probe()
 out.pillClick = { gap: afterPill.gap, pillGone: afterPill.pillLabel === null, maxIndex: afterPill.maxIndex }
+
+// 3b. The same click from a short distance takes a different code path, and
+// only the long-distance one was covered before.
+const nearJumps = []
+for (const up of [400, 900, 1600]) {
+  await page.evaluate(
+    ({ sel, up }) => {
+      const sc = document.querySelector(sel)
+      sc.scrollTop = sc.scrollHeight - sc.clientHeight - up
+    },
+    { sel: SC, up },
+  )
+  await page.waitForTimeout(900)
+  const before = await probe()
+  await page.click(PILL)
+  await page.waitForTimeout(1800)
+  const after = await probe()
+  nearJumps.push({ scrolledUpPx: up, gapBefore: before.gap, gapAfter: after.gap, pillCleared: after.pillLabel === null })
+}
+out.nearPillJumps = nearJumps
 
 // 4. At bottom, a new message scrolls itself into view.
 const beforeFollow = await probe()

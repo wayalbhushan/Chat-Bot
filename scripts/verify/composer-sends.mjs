@@ -10,7 +10,7 @@ import { chromium } from 'playwright'
 
 const URL = 'http://localhost:5173/'
 const SC = '[data-testid="virtuoso-scroller"]'
-const PILL = 'main button[aria-label*="new message"], main button[aria-label="Scroll to latest"]'
+const PILL = 'main button[aria-label*="new message"], main button[aria-label*="ump to latest"]'
 const out = {}
 
 const browser = await chromium.launch()

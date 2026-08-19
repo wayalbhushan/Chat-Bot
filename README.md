@@ -85,7 +85,7 @@ Implementation notes:
 
 `src/lib/mockApi.ts` is the single seam where a real API would be substituted. Failure rate and latency bounds are named constants rather than inline magic numbers.
 
-- Send: 400–900ms latency, 15% failure rate.
+- Send: 400–900ms latency, 5% failure rate — low enough not to interrupt a demo, high enough that the failed state and its retry are reachable by hand.
 - Bot reply: 800–1500ms latency, drawn from a small array of canned responses.
 - Failed sends surface an inline error with a Retry control. Retry is user-initiated only — no auto-retry, no backoff.
 - Bot replies are serialized to preserve ordering and typing-state correctness; a burst drains sequentially rather than in parallel.
@@ -150,7 +150,7 @@ The count is 9–15 rather than higher because the seed includes ~1,600-characte
 
 **Frame timing** — 0 frames over 50ms under realistic wheel scrolling. A synthetic teleport stress test (60 jumps of 10,000px) ranges 0–7 depending on machine load; the wheel figure reflects real use.
 
-**Mock API over 2,000 calls** — 0.152 observed failure rate against a declared 0.15; latencies within declared bounds.
+**Mock API over 2,000 calls** — observed failure rate matched the declared constant to within 0.002 when measured at 0.15; latencies within declared bounds.
 
 **Burst integrity** — 20 rapid sends: 0 messages lost, 0 duplicate IDs, 0 stuck in `sending`, exactly one bot reply per successful send and none for failures.
 
@@ -164,8 +164,9 @@ The count is 9–15 rather than higher because the seed includes ~1,600-characte
 
 ### Bugs found by measurement
 
-Five scroll bugs and three measurement bugs surfaced during this build. Each was found by instrumented measurement rather than visual inspection.
+Six scroll bugs and four measurement bugs surfaced during this build. Each was found by instrumented measurement rather than visual inspection.
 
+- **"Jump to latest" stopped 103px short and never cleared the pill.** The pill's handler had two paths: long jumps settled onto the scroller's true bottom, short ones aligned the last row's edge — leaving the footer below the fold, past the at-bottom threshold, every time. Only the long path had ever been tested, because the test always clicked from mid-list of 10,000. The short path now animates the scroller to its own bottom and settles there. The test covers 400px, 900px and 1600px as well as the long jump.
 - **The composer pushed the newest message out of view while typing.** The bottom-pin observed the rendered list and the typing footer — both *inside* the scroller. The composer sits outside it, so growing the textarea to five lines took 81px of client height from the scroller without changing any observed element: the observer never fired, `scrollTop` never moved, and the gap crossed the at-bottom threshold mid-sentence, raising an unread pill before Enter was ever pressed. The scroller is now observed too. This survived every earlier script because they set the input value in one shot and only sampled *after* send, when the box had already reset to 40px.
 - **Two owners of scroll position** (described above). Only appeared under bursts, and adding console logging perturbed timing enough to hide it — the scripts caught what tracing could not.
 - **Unread count could never clear.** After a pill jump the list settled 95px from the bottom, just past an 80px threshold. `align: 'end'` stops at the last row's edge, leaving the footer below the fold. Without unread messages present it landed at 75px and appeared fine — a 15px margin between working and permanently stuck.

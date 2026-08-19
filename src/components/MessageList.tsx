@@ -10,6 +10,7 @@ import { GROUP_WINDOW_MS } from '../lib/time'
 const AT_BOTTOM_THRESHOLD_PX = 80
 const VIEWPORT_OVERSCAN_PX = 400
 const SMOOTH_JUMP_MAX_PX = 2000
+const SMOOTH_SETTLE_MS = 400
 const SETTLE_PASSES = 6
 
 interface ListContext {
@@ -109,11 +110,21 @@ export function MessageList({
   )
 
   const handleScrollToBottom = () => {
-    const remaining =
-      scroller === null ? 0 : scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
+    if (scroller === null) {
+      virtuosoRef.current?.scrollToIndex({ index: 'LAST', align: 'end', behavior: 'smooth' })
+      return
+    }
+
+    const remaining = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
 
     if (remaining <= SMOOTH_JUMP_MAX_PX) {
-      virtuosoRef.current?.scrollToIndex({ index: 'LAST', align: 'end', behavior: 'smooth' })
+      // Animate the scroller to its own bottom rather than aligning the last
+      // row: align:'end' stops at that row's edge and leaves the footer below
+      // the fold, which parked the view 103px short and left the pill showing.
+      scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' })
+      window.setTimeout(() => {
+        scroller.scrollTop = scroller.scrollHeight
+      }, SMOOTH_SETTLE_MS)
       return
     }
 
