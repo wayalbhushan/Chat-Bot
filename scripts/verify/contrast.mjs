@@ -73,8 +73,10 @@ out.contrast = await page.evaluate(() => {
   add('userBubbleText', document.querySelector('article .bg-blue-600'))
   add('demoButton', document.querySelector('button[aria-label="Load 10,000 demo messages"]'))
   add('clearIcon', document.querySelector('button[aria-label="Clear chat history"]'))
+  // Read from the pseudo-element: a hardcoded colour here silently kept
+  // reporting the old token after the palette was darkened.
   const ta = document.querySelector('textarea')
-  add('placeholder', ta, 'oklch(0.554 0.046 257.417)')
+  add('placeholder', ta, getComputedStyle(ta, '::placeholder').color)
   add('composerText', ta)
   return result
 })
